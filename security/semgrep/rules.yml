@@ -1,0 +1,77 @@
+rules:
+  - id: python-eval-usage
+    languages: [python]
+    severity: ERROR
+    message: "Use of eval() can lead to remote code execution. Use ast.literal_eval or explicit parsing."
+    pattern: eval(...)
+    metadata: {cwe: "CWE-95: Eval Injection", owasp: "A03:2021 - Injection"}
+
+  - id: python-exec-usage
+    languages: [python]
+    severity: ERROR
+    message: "Use of exec() executes arbitrary code."
+    pattern: exec(...)
+    metadata: {cwe: "CWE-95"}
+
+  - id: subprocess-shell-true
+    languages: [python]
+    severity: ERROR
+    message: "subprocess called with shell=True - command injection risk."
+    pattern-either:
+      - pattern: subprocess.$FUNC(..., shell=True, ...)
+      - pattern: os.system(...)
+    metadata: {cwe: "CWE-78: OS Command Injection"}
+
+  - id: flask-debug-enabled
+    languages: [python]
+    severity: WARNING
+    message: "Flask debug mode exposes the Werkzeug debugger and stack traces."
+    pattern: $APP.run(..., debug=True, ...)
+    metadata: {cwe: "CWE-489: Active Debug Code"}
+
+  - id: hardcoded-secret
+    languages: [python]
+    severity: ERROR
+    message: "Hardcoded credential detected. Load secrets from environment or a vault."
+    patterns:
+      - pattern: $KEY = "..."
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: (?i).*(password|passwd|secret|api_key|apikey|token).*
+    metadata: {cwe: "CWE-798: Hardcoded Credentials"}
+
+  - id: weak-hash-md5-sha1
+    languages: [python]
+    severity: WARNING
+    message: "MD5/SHA1 are cryptographically weak. Use SHA-256 or bcrypt/argon2 for passwords."
+    pattern-either:
+      - pattern: hashlib.md5(...)
+      - pattern: hashlib.sha1(...)
+    metadata: {cwe: "CWE-327: Broken Crypto"}
+
+  - id: insecure-deserialization-pickle
+    languages: [python]
+    severity: ERROR
+    message: "pickle.loads on untrusted data allows arbitrary code execution."
+    pattern-either:
+      - pattern: pickle.loads(...)
+      - pattern: pickle.load(...)
+    metadata: {cwe: "CWE-502"}
+
+  - id: llm-output-unescaped-html
+    languages: [python]
+    severity: WARNING
+    message: "Model output rendered as raw HTML without escaping (insecure output handling, OWASP LLM02)."
+    pattern: flask.Markup(...)
+    metadata: {owasp-llm: "LLM02: Insecure Output Handling"}
+
+  - id: logging-user-message
+    languages: [python]
+    severity: INFO
+    message: "Raw user message is written to logs - possible sensitive data exposure."
+    patterns:
+      - pattern: $LOG.$METHOD(..., message, ...)
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: (info|debug|warning|error)
+    metadata: {cwe: "CWE-532: Sensitive Information in Log File"}
