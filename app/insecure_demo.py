@@ -29,7 +29,7 @@ def ping():
         host = str(ipaddress.ip_address(request.json.get("host", "")))  # strict validation
     except ValueError:
         return {"error": "Invalid IP address"}, 400
-    out = subprocess.run(["ping", "-c", "1", host], capture_output=True, text=True,  # nosec B603
+    out = subprocess.run(["/usr/bin/ping", "-c", "1", host], capture_output=True, text=True,  # nosec B603
                          timeout=5, check=False)
     return {"output": out.stdout}
 
